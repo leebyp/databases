@@ -4,8 +4,13 @@ var dbConnection = require("./persistent_server.js");
 
 //select first 100 messages in descending order by start date
 //return
-exports.getFromDatabase = function(){
-
+exports.getFromDatabase = function(table, orderby, count, callback){
+  dbConnection.dbConnection.query("SELECT * FROM " + table + " ORDER BY " + orderby + " DESC", function(err, rows){
+    if (count){
+      rows.splice(count);
+    }
+    callback(rows);
+  });
 };
 
 
