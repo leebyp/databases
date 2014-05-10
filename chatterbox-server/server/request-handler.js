@@ -8,7 +8,7 @@
 var url = require("url");
 var fs = require("fs");
 var qs = require("querystring");
-var dbConnection = require("../../SQL/persistent_server.js");
+var db = require("../../SQL/db_helper.js");
 // var messages = require("./messages.js");
 
 exports.handler = function(request, response) {
@@ -30,13 +30,9 @@ exports.handler = function(request, response) {
   if (path === '/classes/messages'){
     if (request.method === 'GET'){
       console.log("GET request received");
-      dbConnection.dbConnection.query("SELECT u.username FROM users u", function(err, rows){
-        console.log(rows);
-      });
       response.writeHead(200, headers);
 
       fs.readFile('./chatterbox-server/server/messages.rtf', 'utf8', handleFile);
-
 
       function handleFile (err, data) {
         if (err) {
@@ -62,32 +58,7 @@ exports.handler = function(request, response) {
         newMessage = JSON.parse(newMessage);
         newMessage.createdAt = Date();
         console.log(newMessage);
-        dbConnection.dbConnection.query("SELECT id FROM users WHERE username='" + newMessage.username + "'" , function(err, rows){
-          if (err) {
-            throw err;
-          }
-          else{
-            if (rows.length === 0){
-              dbConnection.dbConnection.query("INSERT INTO users SET ?", {username: newMessage.username}, function(err, result){
-                if (err) {throw err;}
-                var userId = result.insertId;
-                dbConnection.dbConnection.query("INSERT INTO messages" +
-                "(user_id, message, room_id, created_at) VALUES ('" + userId + "','" + newMessage.text + "','" +
-                  roomId + "','" + newMessage.createdAt + "')");
-                console.log("new user! Add to user and message database");
-              });
-            }
-            else {
-              var userId = rows[0]["id"];
-              dbConnection.dbConnection.query("INSERT INTO messages" +
-                "(username, text, roomname, createdAt, userId) VALUES ('" + newMessage.username + "','" + newMessage.text + "','" +
-                  newMessage.roomname + "','" + newMessage.createdAt + "','"+ userId + "')");
-              console.log("old user! Add to message database only");
-            }
-          }
-        });
-
-        //fs.appendFile('./chatterbox-server/server/messages.rtf', ", " + JSON.stringify(newMessage));
+        fs.appendFile('./chatterbox-server/server/messages.rtf', ", " + JSON.stringify(newMessage));
       });
       response.writeHead(201, headers);
       response.end();
