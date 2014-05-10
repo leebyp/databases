@@ -55,11 +55,14 @@ exports.postToDatabase = function(newMessage){
     //new user, insert into user database
     if (user === undefined){
       exports.insertIntoDatabase("users", "username", newMessage.username, function(newUserId){
+        console.log("newusersaved");
         //check if the room of the new message already exists
         exports.checkInDatabase(newMessage, "roomname", "rooms", "roomname", function(room){
-          //new room
+          //new room, insert into room database
           if (room === undefined){
             exports.insertIntoDatabase("rooms", "roomname", newMessage.roomname, function(newRoomId){
+              console.log("newroomsaved");
+              //insert message into messages database
               exports.insertMessageIntoDatabase("message", newMessage, newUserId, newRoomId, function(messageId){
                 console.log("message #"  + messageId + "saved");
               });
@@ -67,43 +70,36 @@ exports.postToDatabase = function(newMessage){
           }
           //old room
           else {
-
+            //insert message into messages database
+            exports.insertMessageIntoDatabase("message", newMessage, newUserId, room.roomname, function(messageId){
+              console.log("message #"  + messageId + "saved");
+            });
           }
         });
       });
+    }
     //old user
     else {
-
-
-    }
-  })
-
-};
-
-
-  dbConnection.dbConnection.query("SELECT id FROM users WHERE username='" + newMessage.username + "'" , function(err, rows){
-    if (err) {
-      throw err;
-    }
-    else{
-      if (rows.length === 0){
-        dbConnection.dbConnection.query("INSERT INTO users SET ?", {username: newMessage.username}, function(err, result){
-          if (err) {throw err;}
-          var userId = result.insertId;
-          dbConnection.dbConnection.query("INSERT INTO messages" +
-          "(user_id, message, room_id, created_at) VALUES ('" + userId + "','" + newMessage.text + "','" +
-            roomId + "','" + newMessage.createdAt + "')");
-          console.log("new user! Add to user and message database");
-        });
-      }
-      else {
-        var userId = rows[0]["id"];
-        dbConnection.dbConnection.query("INSERT INTO messages" +
-          "(username, text, roomname, createdAt, userId) VALUES ('" + newMessage.username + "','" + newMessage.text + "','" +
-            newMessage.roomname + "','" + newMessage.createdAt + "','"+ userId + "')");
-        console.log("old user! Add to message database only");
-      }
+      //check if the room of the new message already exists
+      exports.checkInDatabase(newMessage, "roomname", "rooms", "roomname", function(room){
+        //new room, insert into room database
+        if (room === undefined){
+          exports.insertIntoDatabase("rooms", "roomname", newMessage.roomname, function(newRoomId){
+            console.log("newroomsaved");
+            //insert message into messages database
+            exports.insertMessageIntoDatabase("message", newMessage, user.username, newRoomId, function(messageId){
+              console.log("message #"  + messageId + "saved");
+            });
+          });
+        }
+        //old room
+        else {
+          //insert message into messages database
+          exports.insertMessageIntoDatabase("message", newMessage, user.username, room.roomname, function(messageId){
+            console.log("message #"  + messageId + "saved");
+          });
+        }
+      });
     }
   });
-
-
+};
