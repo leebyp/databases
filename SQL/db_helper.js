@@ -4,8 +4,16 @@ var dbConnection = require("./persistent_server.js");
 
 //select first 100 messages in descending order by start date
 //return
-exports.getFromDatabase = function(table, orderby, count, callback){
-  dbConnection.dbConnection.query("SELECT * FROM " + table + " ORDER BY " + orderby + " DESC", function(err, rows){
+
+exports.getFromDatabase = function(orderby, count, callback){
+  dbConnection.dbConnection.query("SELECT m.message AS `text`, " +
+    "m.created_at AS `createdAt`," +
+    "u.username, " +
+    "r.roomname " +
+    "FROM messages m INNER JOIN users u " +
+    "ON (m.user_id = u.id) INNER JOIN rooms r " +
+    "ON (m.room_id = r.id) " +
+    "ORDER BY " + orderby + " DESC", function(err, rows){
     if (count){
       rows.splice(count);
     }

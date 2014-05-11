@@ -32,18 +32,25 @@ exports.handler = function(request, response) {
       console.log("GET request received");
       response.writeHead(200, headers);
 
-      fs.readFile('./chatterbox-server/server/messages.rtf', 'utf8', handleFile);
-
-      function handleFile (err, data) {
-        if (err) {
-          throw err;
-        }
-        //respond with all messages, but stringified
-        // var responsePackage = {results: data};
-        var responsePackage = JSON.parse("[" + data + "]");
-        responsePackage = JSON.stringify({results: responsePackage});
+      db.getFromDatabase('createdAt', 100, function(rows){
+        console.log(rows);
+        console.log(JSON.stringify(rows));
+        var responsePackage = JSON.stringify({results: rows});
         response.end(responsePackage);
-      }
+      });
+
+      // fs.readFile('./chatterbox-server/server/messages.rtf', 'utf8', handleFile);
+
+      // function handleFile (err, data) {
+      //   if (err) {
+      //     throw err;
+      //   }
+      //   //respond with all messages, but stringified
+      //   // var responsePackage = {results: data};
+      //   var responsePackage = JSON.parse("[" + data + "]");
+      //   responsePackage = JSON.stringify({results: responsePackage});
+      //   response.end(responsePackage);
+      //}
     }
     else if (request.method === 'POST'){
       // for posts, wait until entire message is received,
